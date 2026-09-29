@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OS Monitor — CIE Activity Dashboard</title>
+  <meta name="description"
+    content="Interactive OS Monitor Dashboard: real Mac CPU/ISA, memory usage, top 5 processes with states, and locality of reference timing. CIE Operating Systems Activity." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Background particles -->
+  <div class="bg-particles" id="bgParticles"></div>
+
+  <!-- ── Top Bar ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="url(#g1)" stroke-width="2" />
+          <path d="M8 12h8M12 8v8" stroke="url(#g1)" stroke-width="2" stroke-linecap="round" />
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#6366f1" />
+              <stop offset="100%" style="stop-color:#06b6d4" />
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <span class="brand-name">OS Monitor</span>
+        <span class="brand-sub">CIE Activity Dashboard</span>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="live-badge" id="liveBadge">
+        <span class="pulse-dot"></span>
+        <span id="apiLabel">CONNECTING…</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="header-clock" id="headerClock">--:--:--</div>
+      <button class="ctrl-btn" id="themeBtn" title="Toggle Theme">
+        <svg class="theme-icon sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      </button>
+      <button class="ctrl-btn paused" id="pauseBtn" title="Pause/Resume">⏸ Pause</button>
+      <button class="refresh-btn" id="refreshBtn" title="Refresh Now">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main Grid ── -->
+  <main class="main-grid">
+
+    <!-- ── CPU / ISA Card ── -->
+    <section class="stat-card card-cpu" id="cpuCard">
+      <div class="card-header">
+        <div class="card-icon cpu-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <rect x="9" y="9" width="6" height="6" />
+            <line x1="9" y1="1" x2="9" y2="4" />
+            <line x1="15" y1="1" x2="15" y2="4" />
+            <line x1="9" y1="20" x2="9" y2="23" />
+            <line x1="15" y1="20" x2="15" y2="23" />
+            <line x1="20" y1="9" x2="23" y2="9" />
+            <line x1="20" y1="14" x2="23" y2="14" />
+            <line x1="1" y1="9" x2="4" y2="9" />
+            <line x1="1" y1="14" x2="4" y2="14" />
+          </svg>
+        </div>
+        <span class="card-label">CPU / ISA</span>
+        <span class="card-badge">Architecture</span>
+      </div>
+
+      <div class="cpu-name" id="cpuName">Detecting…</div>
+      <div class="cpu-isa" id="cpuISA">ISA: —</div>
+
+      <div class="cpu-meta-row">
+        <div class="cpu-meta-item">
+          <span class="meta-label">Phys Cores</span>
+          <span class="meta-val" id="cpuCores">—</span>
+        </div>
+        <div class="cpu-meta-item">
+          <span class="meta-label">Log. Threads</span>
+          <span class="meta-val" id="cpuThreads">—</span>
+        </div>
+        <div class="cpu-meta-item">
+          <span class="meta-label">Max Freq</span>
+          <span class="meta-val" id="cpuFreq">—</span>
+        </div>
+        <div class="cpu-meta-item">
+          <span class="meta-label">Word Size</span>
+          <span class="meta-val" id="cpuBits">—</span>
+        </div>
+      </div>
+
+      <div class="cpu-cache-row">
+        <span class="cache-val" id="cpuL2"></span>
+        <span class="cache-val" id="cpuL3"></span>
+      </div>
+
+      <div class="cpu-usage-row">
+        <span class="usage-label">CPU Usage</span>
+        <span class="usage-val" id="cpuUsageVal">0%</span>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar cpu-bar" id="cpuBar"></div>
+      </div>
+      <canvas class="spark-canvas" id="cpuSparkline" width="280" height="48"></canvas>
+
+      <!-- Per-core toggle -->
+      <button class="core-toggle-btn" id="coreToggle">▼ Per-Core Usage</button>
+      <div class="core-section" id="coreSection">
+        <div class="core-grid" id="coreGrid"></div>
+      </div>
+    </section>
+
+    <!-- ── Memory Card ── -->
+    <section class="stat-card card-mem" id="memCard">
+      <div class="card-header">
+        <div class="card-icon mem-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" />
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+            <line x1="12" y1="12" x2="12" y2="16" />
+            <line x1="10" y1="14" x2="14" y2="14" />
+          </svg>
+        </div>
+        <span class="card-label">Memory</span>
+        <span class="card-badge">RAM</span>
+      </div>
+
+      <div class="mem-donut-wrap">
+        <canvas id="memDonut" width="140" height="140"></canvas>
+        <div class="donut-center">
+          <span class="donut-pct" id="memPct">0%</span>
+          <span class="donut-sub">Used</span>
+        </div>
+      </div>
+
+      <!-- macOS Activity Monitor accurate breakdown -->
+      <div class="mem-stats">
+        <div class="mem-stat-row">
+          <div class="mem-dot wired-dot"></div>
+          <span>Wired <span class="mem-hint">(kernel)</span></span>
+          <span class="mem-stat-val" id="memWired">— GB</span>
+        </div>
+        <div class="mem-stat-row">
+          <div class="mem-dot active-dot"></div>
+          <span>Active <span class="mem-hint">(in use)</span></span>
+          <span class="mem-stat-val" id="memActive">— GB</span>
+        </div>
+        <div class="mem-stat-row">
+          <div class="mem-dot inactive-dot"></div>
+          <span>Inactive <span class="mem-hint">(cached)</span></span>
+          <span class="mem-stat-val" id="memInactive">— GB</span>
+        </div>
+        <div class="mem-stat-row">
+          <div class="mem-dot compressed-dot"></div>
+          <span>Compressed</span>
+          <span class="mem-stat-val" id="memCompressed">— GB</span>
+        </div>
+        <div class="mem-stat-row">
+          <div class="mem-dot free-dot"></div>
+          <span>Free</span>
+          <span class="mem-stat-val" id="memFree">— GB</span>
+        </div>
+        <div class="mem-stat-row swap-row">
+          <div class="mem-dot swap-dot"></div>
+          <span>Swap Used</span>
+          <span class="mem-stat-val" id="swapUsed">—</span>
+        </div>
+        <div class="mem-stat-row total-row">
+          <span>Total RAM</span>
+          <span class="mem-stat-val" id="memTotal">— GB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Locality Experiment Card ── -->
+    <section class="stat-card card-time" id="localityCard">
+      <div class="card-header">
+        <div class="card-icon time-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M9 21V9" />
+          </svg>
+        </div>
+        <span class="card-label">Locality Benchmark</span>
+        <span class="card-badge">Array Access</span>
+      </div>
+
+      <!-- Raw C++ Output -->
+      <div style="background: #111827; border: 1px solid #374151; padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.75rem; color: #10b981; overflow-x: auto; white-space: pre-wrap; margin-bottom: 12px; line-height: 1.5;" id="locRawOutput">
+Compiling and running C++...
+      </div>
+
+      <div class="locality-info">
+        <!-- Explanation -->
+        <div class="loc-section-title">Why is there a difference?</div>
+        <div class="loc-item" style="grid-column: 1 / -1;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4;">
+            <strong>Row-major</strong> traversal benefits from <em>spatial locality</em>. When a memory address is accessed, the CPU loads the surrounding data into its fast cache. Since Python lists of lists store row elements sequentially, subsequent accesses are lightning fast.<br><br>
+            <strong>Column-major</strong> traversal skips around memory, causing frequent cache misses and forcing the CPU to fetch data from slower RAM.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Process Table (full width) ── -->
+    <section class="process-card" id="processCard">
+      <div class="card-header">
+        <div class="card-icon proc-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+        </div>
+        <span class="card-label">Top 5 Processes</span>
+        <span class="card-badge">Click row to highlight</span>
+        <div class="proc-sort-bar">
+          <button class="sort-btn active" data-sort="cpu" id="sortCpu">CPU%</button>
+          <button class="sort-btn" data-sort="mem" id="sortMem">MEM%</button>
+          <button class="sort-btn" data-sort="pid" id="sortPid">PID</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="proc-table" id="procTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>PID</th>
+              <th>Process Name</th>
+              <th>State</th>
+              <th>CPU %</th>
+              <th>MEM %</th>
+              <th>Threads</th>
+              <th>CPU Bar</th>
+            </tr>
+          </thead>
+          <tbody id="procTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="proc-footer">
+        <span class="proc-total" id="procTotal">Total processes: —</span>
+        <span class="proc-uptime" id="sysUptime">Uptime: —</span>
+        <span class="proc-uptime" id="procUptime"></span>
+      </div>
+    </section>
+
+    <!-- ── Disk I/O Card ── -->
+    <section class="stat-card card-sys" id="diskCard">
+      <div class="card-header">
+        <div class="card-icon disk-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          </svg>
+        </div>
+        <span class="card-label">Disk I/O</span>
+        <span class="card-badge">Storage</span>
+      </div>
+      <div class="disk-ring-wrap">
+        <canvas id="diskDonut" width="110" height="110"></canvas>
+        <div class="donut-center">
+          <span class="donut-pct" id="diskPct">0%</span>
+          <span class="donut-sub">Used</span>
+        </div>
+      </div>
+      <div class="disk-free-lbl" id="diskFreeGb">— free</div>
+      <div class="disk-stats">
+        <div class="disk-io-row">
+          <span class="io-label">↑ Write</span>
+          <span class="io-val" id="diskWrite">— MB/s</span>
+        </div>
+        <div class="disk-io-row">
+          <span class="io-label">↓ Read</span>
+          <span class="io-val" id="diskRead">— MB/s</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Network Card ── -->
+    <section class="stat-card card-net" id="netCard">
+      <div class="card-header">
+        <div class="card-icon net-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+        </div>
+        <span class="card-label">Network</span>
+        <span class="card-badge">Bandwidth</span>
+      </div>
+      <canvas class="net-canvas" id="netCanvas" width="280" height="80"></canvas>
+      <div class="net-stats">
+        <div class="net-stat-row">
+          <span class="net-dot up-dot"></span><span>Upload</span>
+          <span class="net-val" id="netUp">— KB/s</span>
+        </div>
+        <div class="net-stat-row">
+          <span class="net-dot dn-dot"></span><span>Download</span>
+          <span class="net-val" id="netDn">— KB/s</span>
+        </div>
+        <div class="net-stat-row">
+          <span class="net-dot"></span><span>Total Sent</span>
+          <span class="net-val" id="netSent">— MB</span>
+        </div>
+        <div class="net-stat-row">
+          <span class="net-dot"></span><span>Total Recv</span>
+          <span class="net-val" id="netRecv">— MB</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── System Load Card ── -->
+    <section class="stat-card card-load" id="loadCard">
+      <div class="card-header">
+        <div class="card-icon load-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+        </div>
+        <span class="card-label">System Load</span>
+        <span class="card-badge">Avg Load</span>
+      </div>
+      <div class="load-gauges">
+        <div class="load-gauge-item">
+          <div class="gauge-label">1 min</div>
+          <div class="gauge-track">
+            <div class="gauge-fill l1-fill" id="load1Bar"></div>
+          </div>
+          <div class="gauge-val" id="load1Val">—</div>
+        </div>
+        <div class="load-gauge-item">
+          <div class="gauge-label">5 min</div>
+          <div class="gauge-track">
+            <div class="gauge-fill l5-fill" id="load5Bar"></div>
+          </div>
+          <div class="gauge-val" id="load5Val">—</div>
+        </div>
+        <div class="load-gauge-item">
+          <div class="gauge-label">15 min</div>
+          <div class="gauge-track">
+            <div class="gauge-fill l15-fill" id="load15Bar"></div>
+          </div>
+          <div class="gauge-val" id="load15Val">—</div>
+        </div>
+      </div>
+      <div class="os-info">
+        <div class="os-row"><span class="os-lbl">OS</span><span class="os-val" id="osName">—</span></div>
+        <div class="os-row"><span class="os-lbl">Kernel</span><span class="os-val" id="kernelVer">—</span></div>
+        <div class="os-row"><span class="os-lbl">Hostname</span><span class="os-val" id="shellName">—</span></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="dashboard-footer">
+    <span>OS Monitor · CIE Activity · Operating Systems</span>
+    <span id="footerUptime">System Uptime: —</span>
+  </footer>
+
+  <script src="dashboard.js?v=2"></script>
+</body>
+
+</html>
